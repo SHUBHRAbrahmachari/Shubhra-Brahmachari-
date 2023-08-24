@@ -1,0 +1,226 @@
+#include<iostream>
+using namespace std;
+#define gap cout<<endl
+template<typename key,typename value>
+class node{
+	private:
+		key k;
+		value v;
+	public:
+		node *next;
+		node(){
+			cout<<"\n enter the key : ";
+			cin>>this->k;
+			cout<<"\n enter the corresponding value : ";
+			cin>>this->v;
+			next=NULL;
+		}
+		node(key k,value v){
+			this->k=k;
+			this->v=v;
+			this->next=NULL;
+		}
+		key getKey(){
+			return this->k;
+		}
+		value getValue(){
+			return this->v;
+		}
+		void setValue(value v){
+			this->v=v;
+			return;
+		}
+		~node(){}
+};
+template<typename key,typename value>
+class set{
+	private:
+		node<key,value> *head;
+	public:
+		set(){
+			head=NULL;
+		}
+		bool putPair(key k,value v){
+			if(head==NULL){
+				node<key,value> *NEW = new node<key,value>(k,v);
+				head=NEW;
+				return true;
+			}else{
+				node<key,value> *temp,*hold;
+				temp=hold=head;
+				while(temp!=NULL){
+					if(temp->getKey()==k){
+						temp->setValue(v);
+						return false;
+					}
+					hold=temp;
+					temp=temp->next;
+				}
+				node<key,value> *NEW = new node<key,value>(k,v);
+				hold->next=NEW;
+				return true;
+			}
+		}
+		bool putPairIfAbsent(key k,value v){
+			if(head==NULL){
+				node<key,value> *NEW = new node<key,value>(k,v);
+				head=NEW;
+				return true;
+			}else{
+				node<key,value> *temp,*hold;
+				temp=hold=head;
+				while(temp!=NULL){
+					if(temp->getKey()==k){
+						return false;
+					}
+					hold=temp;
+					temp=temp->next;
+				}
+				node<key,value> *NEW = new node<key,value>(k,v);
+				hold->next=NEW;
+				return true;
+			}
+		}
+		bool removePair(key k){
+			if(head->getKey()==k){
+				node<key,value> *temp=head;
+				head=head->next;
+				delete temp;
+				return true;
+			}
+			node<key,value> *temp=head;
+			while(temp->next!=NULL and temp->next->getKey()!=k){
+				temp=temp->next;
+			}
+			if(temp->next==NULL){
+				return false;
+			}else{
+				node<key,value> *tar=temp->next->next;
+				node<key,value> *gar=temp->next;
+				temp->next=tar;
+				delete gar;
+				return true;
+			}
+		}
+		int size(){
+			node<key,value> *temp=head;
+			int count=0;
+			while(temp!=NULL){
+				count+=1;
+				temp=temp->next;
+			}
+			return count;
+		}
+		void print(){
+			node<key,value> *temp=head;
+			while(temp!=NULL){
+				cout<<" "<<temp->getKey()<<" -> "<<temp->getValue()<<" ";
+				temp=temp->next;
+			}
+			return;
+		}
+		node<key,value>* getPair(int index){
+			if(index<0 or index>=size()){
+				return NULL;
+			}
+			node<key,value> *temp = head;
+			for(int i=0;i<index;i++){
+				temp=temp->next;
+			}
+			return temp;
+		}
+};
+
+template<typename key,typename value>
+class Map{
+	private:
+		const double load_factor = 0.750000;
+		int capacity;
+		set<key,value>* *ptr;
+		
+		void rehash(){
+			capacity*=2;
+			set<key,value>* *x = new set<key,value>*[capacity];
+			for(int i=0;i<capacity;i++){
+				set<key,value> *NEW = new set<key,value>();
+				x[i]=NEW;
+			}
+			
+			for(int i=0;i<capacity/2;i++){
+				for(int j=0;j<ptr[i]->size();j++){
+					node<key,value> *temp=ptr[i]->getPair(j);
+					key x1 = temp->getKey();
+					value v = temp->getValue();
+					int val = abs(x1) % capacity;
+					x[val]->putPair(x1,v);
+				}	
+			}
+			set<key,value>* *temp = ptr;
+			ptr=x;
+			delete[] temp;
+			return;
+		}
+		
+	public:
+		Map(int capacity){
+			this->capacity=capacity;
+			ptr=new node<key,value>*[this->capacity];
+			for(int i=0;i<this->capacity;i++){
+				set<key,value> *NEW = new set<key,value>();
+				ptr[i]=NEW;
+			}
+		}
+		Map(){
+			this->capacity=4;
+			ptr=new set<key,value>*[this->capacity];
+			for(int i=0;i<this->capacity;i++){
+				set<key,value> *NEW = new set<key,value>();
+				ptr[i]=NEW;
+		    }
+		}
+		bool put(key k,value v){
+			if(size()==(int)(load_factor*capacity)){
+				rehash();
+			}
+			
+			int x = abs(k) % capacity;
+			ptr[x]->putPair(k,v);
+		}
+		bool putIfAbsent(key k,value v){
+			if(size()==(int)(load_factor*capacity)){
+				rehash();
+			}
+			
+			int x = abs(k) % capacity;
+			ptr[x]->putPairIfAbsent(k,v);
+		}
+		
+		int size(){
+			int count=0;
+			for(int i=0;i<capacity;i++){
+				count+=ptr[i]->size();
+			}
+			return count;
+		}
+		
+		void print(){
+			for(int i=0;i<capacity;i++){
+				ptr[i]->print();
+			}
+		}
+		
+};
+
+int main(){
+	Map<int,int> st;
+	for(int i=0;i<10;i++){
+		int k,v;
+		cout<<"\n enter the key : ";
+		cin>>k;
+		cout<<"\n enter the value : ";
+		cin>>v;
+		st.putIfAbsent(k,v);
+	}
+	st.print();
+	return 0;
+}
